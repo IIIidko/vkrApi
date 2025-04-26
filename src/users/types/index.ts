@@ -2,13 +2,13 @@ import { Request } from '@nestjs/common';
 
 export interface User {
   id: number;
-  nickname: string;
   email: string;
   password: string;
-  first_name?: string | null;
-  last_name?: string | null;
-  birth_date?: string | null;
-  role: 'user' | 'admin' | 'moderator';
+  first_name: string;
+  last_name: string;
+  middle_name?: string | null;
+  birth_date: string;
+  role: 'student' | 'teacher' | 'admin' | 'moderator';
   created_at: string | Date;
   last_login?: string | Date | null;
   status: 'active' | 'blocked';
@@ -18,22 +18,16 @@ export interface User {
 export interface UserForPasswordCheck {
   password: string;
   email: string;
-  nickname: string;
   id: number;
 }
 
 export interface UserCheckExists {
-  nickname: string;
   email: string;
   phone_number: string;
 }
 
 export interface UserCheckEmail {
   email: string;
-}
-
-export interface UserCheckNickname {
-  nickname: string;
 }
 
 export type UserRegistration = Omit<
@@ -58,7 +52,6 @@ export interface CheckCodeResult {
 export interface Payload {
   email: string;
   sub: number;
-  nickname: string;
 }
 
 export interface RequestWithPayload extends Request {

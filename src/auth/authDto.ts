@@ -1,4 +1,4 @@
 export type SignInDto = {
-  emailOrNickname: string;
+  email: string;
   password: string;
 };

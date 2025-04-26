@@ -20,14 +20,13 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async login(emailOrNickname: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string): Promise<LoginResult> {
     const wrong = {
-      message: 'wrong password or email or nickname',
+      message: 'wrong password or email',
       success: false,
     };
     try {
-      const userData =
-        await this.UsersService.findUserByEmailOrNickname(emailOrNickname);
+      const userData = await this.UsersService.findUserByEmail(email);
       if (!userData) {
         return wrong;
       }
@@ -38,7 +37,6 @@ export class AuthService {
       if (isPasswordCorrect) {
         const payload: SignInPayload = {
           email: userData.email,
-          nickname: userData.nickname,
           sub: userData.id,
         };
         const refreshToken: string = await this.jwrService.signAsync(payload, {
@@ -54,7 +52,6 @@ export class AuthService {
             expiresIn: accessAge,
           }),
           refresh_token: refreshToken,
-          nickname: userData.nickname,
         };
       } else {
         return wrong;
@@ -68,15 +65,10 @@ export class AuthService {
     }
   }
 
-  async generateTokens(
-    email: string,
-    nickname: string,
-    id: number,
-  ): Promise<RefreshResult> {
+  async generateTokens(email: string, id: number): Promise<RefreshResult> {
     try {
       const payload: SignInPayload = {
         email: email,
-        nickname: nickname,
         sub: id,
       };
       const refreshToken: string = await this.jwrService.signAsync(payload, {

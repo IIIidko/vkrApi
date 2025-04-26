@@ -6,9 +6,7 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailModule } from './mail/mail.module';
-import { ImagesModule } from './images/images.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
-import * as path from 'node:path';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -19,11 +17,7 @@ import * as path from 'node:path';
     }),
     ScheduleModule.forRoot(),
     MailModule,
-    ImagesModule,
-    ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'images'),
-      serveRoot: '/images/',
-    }),
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

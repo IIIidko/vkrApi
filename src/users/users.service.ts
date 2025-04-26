@@ -6,7 +6,6 @@ import {
   CreateQueryResult,
   UserCheckEmail,
   UserCheckExists,
-  UserCheckNickname,
   UserForPasswordCheck,
   UserRegistration,
 } from './types';
@@ -23,12 +22,10 @@ export class UsersService {
     private MailService: MailService,
   ) {}
 
-  async findUserByEmailOrNickname(
-    emailOrNickname: string,
-  ): Promise<UserForPasswordCheck> {
+  async findUserByEmail(email: string): Promise<UserForPasswordCheck> {
     const res: QueryResult<UserForPasswordCheck> = await this.conn.query(
-      'SELECT nickname, email, id, password  FROM users WHERE email = $1 OR nickname = $1',
-      [emailOrNickname],
+      'SELECT email, id, password  FROM users WHERE email = $1',
+      [email],
     );
     return res.rows[0];
   }
@@ -45,23 +42,23 @@ export class UsersService {
   }
 
   async createUser(user: UserRegistration): Promise<number | null> {
-    await this.checkExists(user.email, user.nickname, user.tel);
+    await this.checkExists(user.email, user.tel);
 
     let res: QueryResult<CreateQueryResult>;
     const hashPassword: string = await getHashPassword(user.password);
     try {
       res = await this.conn.query(
-        'INSERT INTO users (nickname, email, password, first_name, last_name, birth_date, role, status, phone_number) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+        'INSERT INTO users (email, password, first_name, last_name, birth_date, role, status, phone_number, middle_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
         [
-          user.nickname,
           user.email,
           hashPassword,
-          user.first_name ?? null,
-          user.last_name ?? null,
-          user.birth_date ?? null,
-          'user',
+          user.first_name,
+          user.last_name,
+          user.birth_date,
+          'student',
           'active',
           user.tel ?? null,
+          user.middle_name ?? null,
         ],
       );
     } catch (e) {
@@ -75,19 +72,14 @@ export class UsersService {
     }
   }
 
-  async checkExists(
-    email: string,
-    nickname: string,
-    phone?: string | null,
-  ): Promise<boolean> {
+  async checkExists(email: string, phone?: string | null): Promise<boolean> {
     let checkRes: QueryResult<UserCheckExists>;
-    let selectQuery: string =
-      'SELECT email, nickname FROM users WHERE email = $1 OR nickname = $2';
-    const paramsArray = [email, nickname];
+    let selectQuery: string = 'SELECT email FROM users WHERE email = $1';
+    const paramsArray = [email];
 
     if (phone) {
       selectQuery =
-        'SELECT email, nickname, phone_number FROM users WHERE email = $1 OR nickname = $2 OR phone_number = $3';
+        'SELECT email, phone_number FROM users WHERE email = $1 OR phone_number = $2';
       paramsArray.push(phone);
     }
     try {
@@ -96,9 +88,6 @@ export class UsersService {
         const existing = checkRes.rows[0];
         if (existing.email === email) {
           throw new Error('Email already exists');
-        }
-        if (existing.nickname === nickname) {
-          throw new Error('Nickname already exists');
         }
         if (existing.phone_number === phone) {
           throw new Error('Phone number already exists');
@@ -121,24 +110,6 @@ export class UsersService {
       const checkRes: QueryResult<UserCheckEmail> = await this.conn.query(
         'SELECT email FROM users WHERE email = $1',
         [email],
-      );
-      if (checkRes.rows.length === 0) {
-        res = { exists: false };
-      }
-      return res;
-    } catch (error) {
-      throw new Error(`Failed to check user existence: ${error}`);
-    }
-  }
-
-  async checkNicknameExists(nickname: string): Promise<{ exists: boolean }> {
-    let res: { exists: boolean } = {
-      exists: true,
-    };
-    try {
-      const checkRes: QueryResult<UserCheckNickname> = await this.conn.query(
-        'SELECT nickname FROM users WHERE nickname = $1',
-        [nickname],
       );
       if (checkRes.rows.length === 0) {
         res = { exists: false };

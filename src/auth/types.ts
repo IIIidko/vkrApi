@@ -5,7 +5,6 @@ export interface LoginResult {
   message?: string;
   access_token?: string;
   refresh_token?: string;
-  nickname?: string;
 }
 export interface RefreshResult {
   access_token?: string;
@@ -16,16 +15,13 @@ export interface LoginResponse {
   success: boolean;
   message?: string;
   access_token?: string;
-  nickname?: string;
 }
 
 export interface CheckResponse {
   isAuth: boolean;
-  nickname?: string;
 }
 
 export interface SignInPayload {
-  nickname: string;
   email: string;
   sub: number;
 }
@@ -37,7 +33,6 @@ export interface CheckRefresh {
 export interface Payload {
   email: string;
   sub: number;
-  nickname: string;
 }
 
 export interface RequestWithPayload extends Request {

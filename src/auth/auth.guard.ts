@@ -11,7 +11,6 @@ import { Request } from 'express';
 interface Payload {
   email: string;
   sub: number;
-  nickname: string;
 }
 
 interface RequestWithPayload extends Request {

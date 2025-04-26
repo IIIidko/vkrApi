@@ -60,13 +60,6 @@ export class UsersController {
     return await this.UserService.checkEmailExists(email);
   }
 
-  @Get('checknickname/:nickname')
-  async checkNicknameExists(
-    @Param('nickname') nickname: string,
-  ): Promise<{ exists: boolean }> {
-    return await this.UserService.checkNicknameExists(nickname);
-  }
-
   @UseGuards(AuthGuard)
   @Delete('delete')
   async deleteUser(
@@ -116,6 +109,7 @@ export class UsersController {
         userId = createResult;
       }
     } catch (error: unknown) {
+      console.log('error in create user', error);
       const message: string =
         error instanceof Error
           ? error.message.split(' ').slice(0, 1).join('')
@@ -131,13 +125,12 @@ export class UsersController {
         },
         HttpStatus.CONFLICT,
         {
-          cause: 'Email or Phone Number or nickname exists',
+          cause: 'Email or Phone Number exists',
         },
       );
     }
     const tokens = await this.AuthService.generateTokens(
       CreateUserDto.email,
-      CreateUserDto.nickname,
       userId,
     );
     response.cookie('refresh_token', tokens.refresh_token, {

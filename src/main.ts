@@ -13,10 +13,10 @@ async function bootstrap() {
   app.use(cookieParser(process.env['COOKIE_SECRET']));
 
   const config = new DocumentBuilder()
-    .setTitle('Magic-collection')
-    .setDescription('The magic-collection API description')
+    .setTitle('vkr')
+    .setDescription('vkr description')
     .setVersion('1.0')
-    .addTag('magic-collection')
+    .addTag('vkr')
     .build();
   const documentFactory = () =>
     SwaggerModule.createDocument(app, config, { ignoreGlobalPrefix: false });
