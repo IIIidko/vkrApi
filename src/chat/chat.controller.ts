@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Request,
   Res,
@@ -12,7 +13,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RequestWithPayload } from '../auth/types';
 import { ChatService } from './chat.service';
 import { Response } from 'express';
-import { HistoryItem, MessageData } from './types';
+import { HistoryItem, MessageData, MessagePairs } from './types';
 
 @Controller('chat')
 export class ChatController {
@@ -48,5 +49,20 @@ export class ChatController {
       throw new UnauthorizedException();
     }
     return await this.ChatService.getHistories(req.user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('messagesByHistory/:id')
+  async getMessagesByHistory(
+    @Param() params: { id: string },
+    @Request() req: RequestWithPayload,
+  ): Promise<MessagePairs[]> {
+    if (!req.user?.sub) {
+      throw new UnauthorizedException();
+    }
+    return await this.ChatService.getMessagesByHistoryId(
+      params.id,
+      req.user.sub,
+    );
   }
 }

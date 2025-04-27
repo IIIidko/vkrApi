@@ -2,11 +2,44 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Response } from 'express';
 import { PG_CONNECTION } from '../constants';
 import { Pool, QueryResult } from 'pg';
-import { ChatChunkResponse, ChatRequestBody, HistoryItem } from './types';
+import {
+  ChatChunkResponse,
+  ChatRequestBody,
+  HistoryItem,
+  MessagePairs,
+} from './types';
 
 @Injectable()
 export class ChatService {
   constructor(@Inject(PG_CONNECTION) private conn: Pool) {}
+
+  async getMessagesByHistoryId(
+    historyId: string,
+    userId: number,
+  ): Promise<MessagePairs[]> {
+    try {
+      const resultRaw: QueryResult<{
+        request_message: string;
+        answer: string;
+      }> = await this.conn.query(
+        `SELECT request_message, answer FROM chat_messages WHERE history_id = $1 AND user_id = $2;`,
+        [historyId, userId],
+      );
+      if (resultRaw.rows.length === 0) return [];
+      return resultRaw.rows.map((pair) => {
+        return {
+          requestMessage: pair.request_message,
+          answer: pair.answer,
+        };
+      });
+    } catch (e) {
+      console.log(
+        'error in selection messages by history id with check user id',
+        e,
+      );
+      return [];
+    }
+  }
 
   async getHistories(userId: number): Promise<HistoryItem[]> {
     try {
