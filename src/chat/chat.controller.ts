@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Request,
   Res,
@@ -11,12 +12,7 @@ import { AuthGuard } from '../auth/auth.guard';
 import { RequestWithPayload } from '../auth/types';
 import { ChatService } from './chat.service';
 import { Response } from 'express';
-
-interface MessageData {
-  message: string;
-  historyId?: string;
-  contextId?: string;
-}
+import { HistoryItem, MessageData } from './types';
 
 @Controller('chat')
 export class ChatController {
@@ -41,5 +37,16 @@ export class ChatController {
       response,
       req.user?.sub,
     );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('getHistories')
+  async getHistories(
+    @Request() req: RequestWithPayload,
+  ): Promise<HistoryItem[]> {
+    if (!req.user?.sub) {
+      throw new UnauthorizedException();
+    }
+    return await this.ChatService.getHistories(req.user.sub);
   }
 }

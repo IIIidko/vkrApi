@@ -2,38 +2,35 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Response } from 'express';
 import { PG_CONNECTION } from '../constants';
 import { Pool, QueryResult } from 'pg';
-
-interface ChatRequestBody {
-  model: string;
-  stream: boolean;
-  prompt: string;
-}
-
-interface ChatLastResponse {
-  model: string;
-  created_at: string; // ISO дата-время
-  response: string;
-  done: boolean;
-  done_reason: string;
-  context: number[];
-  total_duration: number;
-  load_duration: number;
-  prompt_eval_count: number;
-  prompt_eval_duration: number;
-  eval_count: number;
-  eval_duration: number;
-}
-
-interface ChatChunkResponse {
-  created_at: string; // ISO дата-время
-  response: string;
-  done: boolean;
-  model: string;
-}
+import { ChatChunkResponse, ChatRequestBody, HistoryItem } from './types';
 
 @Injectable()
 export class ChatService {
   constructor(@Inject(PG_CONNECTION) private conn: Pool) {}
+
+  async getHistories(userId: number): Promise<HistoryItem[]> {
+    try {
+      const resultRaw: QueryResult<{
+        history_id: string;
+        history_name: string;
+      }> = await this.conn.query(
+        `SELECT history_id, history_name FROM chat_histories WHERE user_id = $1;`,
+        [userId],
+      );
+      if (resultRaw.rows.length === 0) {
+        return [];
+      }
+      return resultRaw.rows.map((row) => {
+        return {
+          id: row.history_id,
+          historyName: row.history_name,
+        };
+      });
+    } catch (e) {
+      console.log('error in select histories by user', e);
+      return [];
+    }
+  }
 
   async getReadableStreamAnswer(prompt: string): Promise<ReadableStream> {
     const body: ChatRequestBody = {
