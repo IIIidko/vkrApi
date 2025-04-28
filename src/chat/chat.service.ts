@@ -6,7 +6,7 @@ import {
   ChatChunkResponse,
   ChatRequestBody,
   HistoryItem,
-  MessagePairs,
+  MessagePair,
 } from './types';
 
 @Injectable()
@@ -16,13 +16,14 @@ export class ChatService {
   async getMessagesByHistoryId(
     historyId: string,
     userId: number,
-  ): Promise<MessagePairs[]> {
+  ): Promise<MessagePair[]> {
     try {
       const resultRaw: QueryResult<{
         request_message: string;
         answer: string;
+        pair_id: string;
       }> = await this.conn.query(
-        `SELECT request_message, answer FROM chat_messages WHERE history_id = $1 AND user_id = $2;`,
+        `SELECT request_message, answer, pair_id FROM chat_messages WHERE history_id = $1 AND user_id = $2;`,
         [historyId, userId],
       );
       if (resultRaw.rows.length === 0) return [];
@@ -30,6 +31,7 @@ export class ChatService {
         return {
           requestMessage: pair.request_message,
           answer: pair.answer,
+          pairId: pair.pair_id,
         };
       });
     } catch (e) {
@@ -44,23 +46,26 @@ export class ChatService {
   async getLastMessageByHistoryId(
     historyId: string,
     userId: number,
-  ): Promise<MessagePairs> {
+  ): Promise<MessagePair> {
     try {
       const resultRaw: QueryResult<{
         request_message: string;
         answer: string;
+        pair_id: string;
       }> = await this.conn.query(
-        `SELECT request_message, answer FROM chat_messages WHERE history_id = $1 AND user_id = $2 ORDER BY created_at DESC LIMIT 1;`,
+        `SELECT request_message, answer, pair_id FROM chat_messages WHERE history_id = $1 AND user_id = $2 ORDER BY created_at DESC LIMIT 1;`,
         [historyId, userId],
       );
       if (resultRaw.rows.length === 0)
         return {
           requestMessage: '',
           answer: '',
+          pairId: '',
         };
       return {
         requestMessage: resultRaw.rows[0].request_message,
         answer: resultRaw.rows[0].answer,
+        pairId: resultRaw.rows[0].pair_id,
       };
     } catch (e) {
       console.log(
@@ -70,6 +75,7 @@ export class ChatService {
       return {
         requestMessage: '',
         answer: '',
+        pairId: '',
       };
     }
   }

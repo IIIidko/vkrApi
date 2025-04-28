@@ -37,7 +37,8 @@ export interface MessageData {
   contextId?: string;
 }
 
-export interface MessagePairs {
+export interface MessagePair {
   requestMessage: string;
   answer: string;
+  pairId: string;
 }
