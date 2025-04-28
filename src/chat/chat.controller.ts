@@ -37,6 +37,7 @@ export class ChatController {
       messageData.message,
       response,
       req.user?.sub,
+      messageData.historyId,
     );
   }
 
@@ -49,6 +50,21 @@ export class ChatController {
       throw new UnauthorizedException();
     }
     return await this.ChatService.getHistories(req.user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('lastMessageByHistory/:id')
+  async getLastMessageByHistory(
+    @Param() params: { id: string },
+    @Request() req: RequestWithPayload,
+  ): Promise<MessagePairs> {
+    if (!req.user?.sub) {
+      throw new UnauthorizedException();
+    }
+    return await this.ChatService.getLastMessageByHistoryId(
+      params.id,
+      req.user.sub,
+    );
   }
 
   @UseGuards(AuthGuard)

@@ -41,6 +41,39 @@ export class ChatService {
     }
   }
 
+  async getLastMessageByHistoryId(
+    historyId: string,
+    userId: number,
+  ): Promise<MessagePairs> {
+    try {
+      const resultRaw: QueryResult<{
+        request_message: string;
+        answer: string;
+      }> = await this.conn.query(
+        `SELECT request_message, answer FROM chat_messages WHERE history_id = $1 AND user_id = $2 ORDER BY created_at DESC LIMIT 1;`,
+        [historyId, userId],
+      );
+      if (resultRaw.rows.length === 0)
+        return {
+          requestMessage: '',
+          answer: '',
+        };
+      return {
+        requestMessage: resultRaw.rows[0].request_message,
+        answer: resultRaw.rows[0].answer,
+      };
+    } catch (e) {
+      console.log(
+        'error in selection messages by history id with check user id',
+        e,
+      );
+      return {
+        requestMessage: '',
+        answer: '',
+      };
+    }
+  }
+
   async getHistories(userId: number): Promise<HistoryItem[]> {
     try {
       const resultRaw: QueryResult<{
@@ -84,8 +117,6 @@ export class ChatService {
   }
 
   async createHistory(userId: number): Promise<string> {
-    console.log('i am here2');
-
     const resultRaw: QueryResult<{ history_id: string }> =
       await this.conn.query(
         `INSERT INTO chat_histories (user_id) VALUES ($1) RETURNING history_id;`,
@@ -107,7 +138,6 @@ export class ChatService {
     userId: number,
     historyId: string,
   ): Promise<void> {
-    console.log('i am here');
     try {
       await this.conn.query(
         `INSERT INTO chat_messages (user_id, request_message, answer, history_id) VALUES ($1, $2, $3, $4);`,
