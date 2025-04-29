@@ -41,4 +41,5 @@ export interface MessagePair {
   requestMessage: string;
   answer: string;
   pairId: string;
+  historyId?: string;
 }

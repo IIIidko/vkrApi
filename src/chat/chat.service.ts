@@ -227,13 +227,16 @@ export class ChatService {
 
     const stream = new ReadableStream({
       start(controller) {
+        if (!historyId) {
+          response.write(`/historyId:${realHistoryId}/`);
+        }
         function push() {
           reader.read().then(({ done, value }) => {
             if (done) {
               const messageWithoutThink: string =
                 message.split('</think>').at(-1) ?? message;
-              console.log('ended answer', messageWithoutThink);
               addChatPair(messageWithoutThink);
+              console.log('added message to chat pair', messageWithoutThink);
               response.end();
               controller.close();
               return;
@@ -252,10 +255,6 @@ export class ChatService {
                 !('response' in chunkResponse)
               ) {
                 return;
-              }
-
-              if (chunkResponse.done) {
-                console.log('last response', chunkResponse);
               }
 
               const chunkMessage: string = chunkResponse.response;
