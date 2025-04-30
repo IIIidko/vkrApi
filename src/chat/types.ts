@@ -1,27 +1,24 @@
-export interface ChatRequestBody {
-  model: string;
-  stream: boolean;
-  prompt: string;
+export interface MessageInRequest {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  content: string;
+  tool_calls?: string;
 }
 
-export interface ChatLastResponse {
+type ResponseChat = MessageInRequest;
+
+export interface ChatRequestBody {
   model: string;
-  created_at: string; // ISO дата-время
-  response: string;
-  done: boolean;
-  done_reason: string;
-  context: number[];
-  total_duration: number;
-  load_duration: number;
-  prompt_eval_count: number;
-  prompt_eval_duration: number;
-  eval_count: number;
-  eval_duration: number;
+  stream?: boolean;
+  messages: MessageInRequest[];
+  tools?: string;
+  format?: string;
+  options?: any;
+  keep_alive?: string;
 }
 
 export interface ChatChunkResponse {
   created_at: string; // ISO дата-время
-  response: string;
+  message: ResponseChat;
   done: boolean;
   model: string;
 }

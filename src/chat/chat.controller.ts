@@ -81,4 +81,24 @@ export class ChatController {
       req.user.sub,
     );
   }
+
+  @UseGuards(AuthGuard)
+  @Get('checkHistory/:id')
+  async checkHistoryExists(
+    @Param() params: { id: string },
+    @Request() req: RequestWithPayload,
+  ): Promise<{
+    exists: boolean;
+  }> {
+    if (!req.user?.sub) {
+      throw new UnauthorizedException();
+    }
+    const check: boolean = await this.ChatService.checkHistoryExists(
+      params.id,
+      req.user.sub,
+    );
+    return {
+      exists: check,
+    };
+  }
 }
