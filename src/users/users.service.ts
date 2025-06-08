@@ -166,62 +166,62 @@ export class UsersService {
       return false;
     }
     if (!isSuccessfulAdded) return false;
-    // try {
-    //   await this.MailService.transporter.sendMail({
-    //     from: 'magic.collection.ru@gmail.com',
-    //     // to: email,
-    //     to: 'demonstration6v@gmail.com',
-    //     subject: 'verification code',
-    //     text: `Your verification code is ${verificationCode}`,
-    //     html: `<!DOCTYPE html>
-    // <html>
-    // <head>
-    //     <meta charset="UTF-8">
-    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //     <title>Верификация почты</title>
-    //     <style>
-    //         body {
-    //             font-family: Arial, sans-serif;
-    //             background-color: #f4f4f4;
-    //             padding: 20px;
-    //         }
-    //         .container {
-    //             max-width: 400px;
-    //             background: #ffffff;
-    //             padding: 20px;
-    //             margin: 0 auto;
-    //             border-radius: 8px;
-    //             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    //             text-align: center;
-    //         }
-    //         .code {
-    //             font-size: 24px;
-    //             font-weight: bold;
-    //             color: #333;
-    //             margin: 20px 0;
-    //         }
-    //         .footer {
-    //             margin-top: 20px;
-    //             font-size: 14px;
-    //             color: #777;
-    //         }
-    //     </style>
-    // </head>
-    // <body>
-    //     <div class="container">
-    //         <h2>Подтверждение почты</h2>
-    //         <p>Ваш код верификации:</p>
-    //         <p class="code">${verificationCode}</p>
-    //         <p class="footer">Этот код действителен в течение 15 минут.</p>
-    //     </div>
-    // </body>
-    // </html>
-    // `,
-    //   });
-    // } catch (e) {
-    //   console.log(e);
-    //   return false;
-    // }
+    try {
+      await this.MailService.transporter.sendMail({
+        from: 'magic.collection.ru@gmail.com',
+        // to: email,
+        to: 'demonstration6v@gmail.com',
+        subject: 'verification code',
+        text: `Your verification code is ${verificationCode}`,
+        html: `<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Верификация почты</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                padding: 20px;
+            }
+            .container {
+                max-width: 400px;
+                background: #ffffff;
+                padding: 20px;
+                margin: 0 auto;
+                border-radius: 8px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            }
+            .code {
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+                margin: 20px 0;
+            }
+            .footer {
+                margin-top: 20px;
+                font-size: 14px;
+                color: #777;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h2>Подтверждение почты</h2>
+            <p>Ваш код верификации:</p>
+            <p class="code">${verificationCode}</p>
+            <p class="footer">Этот код действителен в течение 15 минут.</p>
+        </div>
+    </body>
+    </html>
+    `,
+      });
+    } catch (e) {
+      console.log(e);
+      return false;
+    }
     return true;
   }
 
