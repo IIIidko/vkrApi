@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MailModule } from './mail/mail.module';
 import { ChatModule } from './chat/chat.module';
+import { LecturesModule } from './lectures/lectures.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChatModule } from './chat/chat.module';
     ScheduleModule.forRoot(),
     MailModule,
     ChatModule,
+    LecturesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
