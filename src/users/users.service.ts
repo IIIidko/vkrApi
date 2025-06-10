@@ -4,8 +4,11 @@ import { Pool, QueryResult } from 'pg';
 import {
   CheckCodeResult,
   CreateQueryResult,
+  User,
   UserCheckEmail,
   UserCheckExists,
+  UserForAdmin,
+  UserForChange,
   UserForPasswordCheck,
   UserRegistration,
 } from './types';
@@ -13,7 +16,6 @@ import { getHashPassword } from './hashPassword';
 import * as crypto from 'node:crypto';
 import { Cron } from '@nestjs/schedule';
 import { MailService } from '../mail/mail.service';
-import { SentMessageInfo } from 'nodemailer';
 
 @Injectable()
 export class UsersService {
@@ -22,9 +24,57 @@ export class UsersService {
     private MailService: MailService,
   ) {}
 
+  async checkIsAdmin(id: number): Promise<boolean> {
+    const res: QueryResult<{ role: string }> = await this.conn.query(
+      'SELECT role  FROM users WHERE  id = $1',
+      [id],
+    );
+    return res.rows[0].role === 'admin';
+  }
+
+  async getAllUsers(adminId: number): Promise<UserForAdmin[]> {
+    const isAdmin: boolean = await this.checkIsAdmin(adminId);
+
+    if (!isAdmin) return [];
+
+    const res: QueryResult<User> = await this.conn.query(
+      `SELECT id, email, first_name, last_name, middle_name, birth_date, phone_number, role, created_at, last_login, status, is_public  FROM users WHERE role != 'admin'`,
+      [],
+    );
+
+    return res.rows;
+  }
+
+  async changeUser(adminId: number, user: UserForChange): Promise<boolean> {
+    const isAdmin = await this.checkIsAdmin(adminId);
+
+    if (!isAdmin) return false;
+
+    try {
+      const res: QueryResult<User> = await this.conn.query(
+        `UPDATE users SET email = $1, first_name = $2, last_name = $3, middle_name = $4, birth_date = $5, phone_number = $6, role = $7, status = $8 WHERE id = $9`,
+        [
+          user.email,
+          user.first_name,
+          user.last_name,
+          user.middle_name,
+          user.birth_date,
+          user.tel,
+          user.role,
+          user.status,
+          user.id,
+        ],
+      );
+    } catch (e) {
+      console.log('error in changing user', e);
+      return false;
+    }
+    return true;
+  }
+
   async findUserByEmail(email: string): Promise<UserForPasswordCheck> {
     const res: QueryResult<UserForPasswordCheck> = await this.conn.query(
-      'SELECT email, id, password  FROM users WHERE email = $1',
+      'SELECT email, id, password, role  FROM users WHERE email = $1',
       [email],
     );
     return res.rows[0];
@@ -166,62 +216,62 @@ export class UsersService {
       return false;
     }
     if (!isSuccessfulAdded) return false;
-    try {
-      await this.MailService.transporter.sendMail({
-        from: 'magic.collection.ru@gmail.com',
-        // to: email,
-        to: 'demonstration6v@gmail.com',
-        subject: 'verification code',
-        text: `Your verification code is ${verificationCode}`,
-        html: `<!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Верификация почты</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f4f4f4;
-                padding: 20px;
-            }
-            .container {
-                max-width: 400px;
-                background: #ffffff;
-                padding: 20px;
-                margin: 0 auto;
-                border-radius: 8px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                text-align: center;
-            }
-            .code {
-                font-size: 24px;
-                font-weight: bold;
-                color: #333;
-                margin: 20px 0;
-            }
-            .footer {
-                margin-top: 20px;
-                font-size: 14px;
-                color: #777;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>Подтверждение почты</h2>
-            <p>Ваш код верификации:</p>
-            <p class="code">${verificationCode}</p>
-            <p class="footer">Этот код действителен в течение 15 минут.</p>
-        </div>
-    </body>
-    </html>
-    `,
-      });
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
+    // try {
+    //   await this.MailService.transporter.sendMail({
+    //     from: 'magic.collection.ru@gmail.com',
+    //     // to: email,
+    //     to: 'demonstration6v@gmail.com',
+    //     subject: 'verification code',
+    //     text: `Your verification code is ${verificationCode}`,
+    //     html: `<!DOCTYPE html>
+    // <html>
+    // <head>
+    //     <meta charset="UTF-8">
+    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //     <title>Верификация почты</title>
+    //     <style>
+    //         body {
+    //             font-family: Arial, sans-serif;
+    //             background-color: #f4f4f4;
+    //             padding: 20px;
+    //         }
+    //         .container {
+    //             max-width: 400px;
+    //             background: #ffffff;
+    //             padding: 20px;
+    //             margin: 0 auto;
+    //             border-radius: 8px;
+    //             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    //             text-align: center;
+    //         }
+    //         .code {
+    //             font-size: 24px;
+    //             font-weight: bold;
+    //             color: #333;
+    //             margin: 20px 0;
+    //         }
+    //         .footer {
+    //             margin-top: 20px;
+    //             font-size: 14px;
+    //             color: #777;
+    //         }
+    //     </style>
+    // </head>
+    // <body>
+    //     <div class="container">
+    //         <h2>Подтверждение почты</h2>
+    //         <p>Ваш код верификации:</p>
+    //         <p class="code">${verificationCode}</p>
+    //         <p class="footer">Этот код действителен в течение 15 минут.</p>
+    //     </div>
+    // </body>
+    // </html>
+    // `,
+    //   });
+    // } catch (e) {
+    //   console.log(e);
+    //   return false;
+    // }
     return true;
   }
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { checkPassword } from '../users/hashPassword';
-import { LoginResult, RefreshResult, SignInPayload } from './types';
+import { LoginResult, RefreshResult, Role, SignInPayload } from './types';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PG_CONNECTION } from '../constants';
@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     @Inject(PG_CONNECTION) private conn: Pool,
     private UsersService: UsersService,
-    private jwrService: JwtService,
+    private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
 
@@ -38,8 +38,9 @@ export class AuthService {
         const payload: SignInPayload = {
           email: userData.email,
           sub: userData.id,
+          role: userData.role,
         };
-        const refreshToken: string = await this.jwrService.signAsync(payload, {
+        const refreshToken: string = await this.jwtService.signAsync(payload, {
           secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
           expiresIn: refreshAge,
         });
@@ -47,11 +48,12 @@ export class AuthService {
         await this.UsersService.updateLastLogin(userData.id);
         return {
           success: true,
-          access_token: await this.jwrService.signAsync(payload, {
+          access_token: await this.jwtService.signAsync(payload, {
             secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
             expiresIn: accessAge,
           }),
           refresh_token: refreshToken,
+          role: userData.role,
         };
       } else {
         return wrong;
@@ -65,19 +67,24 @@ export class AuthService {
     }
   }
 
-  async generateTokens(email: string, id: number): Promise<RefreshResult> {
+  async generateTokens(
+    email: string,
+    id: number,
+    role: Role,
+  ): Promise<RefreshResult> {
     try {
       const payload: SignInPayload = {
         email: email,
         sub: id,
+        role,
       };
-      const refreshToken: string = await this.jwrService.signAsync(payload, {
+      const refreshToken: string = await this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: refreshAge,
       });
       await this.changeRefresh(id, refreshToken);
       return {
-        access_token: await this.jwrService.signAsync(payload, {
+        access_token: await this.jwtService.signAsync(payload, {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
           expiresIn: accessAge,
         }),

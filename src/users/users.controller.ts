@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Request,
   Res,
   UseGuards,
@@ -17,6 +18,7 @@ import {
 import { UsersService } from './users.service';
 import { ZodValidationPipe } from '../zod-validation-pipe/zod-validation-pipe.pipe';
 import {
+  ChangeUserDto,
   CreateUserDto,
   CreateUserDtoClass,
   createUserSchema,
@@ -32,7 +34,12 @@ import { AuthGuard } from '../auth/auth.guard';
 import { AuthService } from '../auth/auth.service';
 import { Response } from 'express';
 import { SendEmailDto, sendEmailSchema } from './emailDto';
-import { CheckCodeResult, CreateResponse, RequestWithPayload } from './types';
+import {
+  CheckCodeResult,
+  CreateResponse,
+  RequestWithPayload,
+  UserForAdmin,
+} from './types';
 
 const millisecondsAge: number = 2 * 30 * 24 * 60 * 60 * 1000;
 
@@ -42,6 +49,31 @@ export class UsersController {
     private readonly UserService: UsersService,
     private readonly AuthService: AuthService,
   ) {}
+
+  @UseGuards(AuthGuard)
+  @Get('getAll')
+  async getAll(@Request() req: RequestWithPayload): Promise<UserForAdmin[]> {
+    return this.UserService.getAllUsers(req.user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('changeUser')
+  async changeUser(
+    @Request() req: RequestWithPayload,
+    @Body() ChangeUserDto: ChangeUserDto,
+  ): Promise<boolean> {
+    return this.UserService.changeUser(req.user.sub, {
+      email: ChangeUserDto.email,
+      id: ChangeUserDto.id,
+      birth_date: ChangeUserDto.birth_date,
+      last_name: ChangeUserDto.last_name,
+      first_name: ChangeUserDto.first_name,
+      tel: ChangeUserDto.tel,
+      role: ChangeUserDto.role,
+      middle_name: ChangeUserDto.middle_name,
+      status: ChangeUserDto.status,
+    });
+  }
 
   @UseGuards(AuthGuard)
   @Get('testGuard')
@@ -132,6 +164,7 @@ export class UsersController {
     const tokens = await this.AuthService.generateTokens(
       CreateUserDto.email,
       userId,
+      'student',
     );
     response.cookie('refresh_token', tokens.refresh_token, {
       maxAge: millisecondsAge,

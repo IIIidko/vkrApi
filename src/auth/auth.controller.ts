@@ -14,22 +14,15 @@ import {
   CheckResponse,
   LoginResponse,
   LoginResult,
+  RefreshResponse,
   RefreshResult,
+  RequestWithPayload,
 } from './types';
 import { Response } from 'express';
 import { AuthRefreshGuard } from './authRefresh.guard';
 import { AuthGuard } from './auth.guard';
 
 const millisecondsAge: number = 2 * 30 * 24 * 60 * 60 * 1000;
-
-interface Payload {
-  email: string;
-  sub: number;
-}
-
-interface RequestWithPayload extends Request {
-  user: Payload;
-}
 
 @Controller('auth')
 export class AuthController {
@@ -56,15 +49,17 @@ export class AuthController {
       access_token: loginResult.access_token,
       success: loginResult.success,
       message: loginResult.message,
+      role: loginResult.role ?? 'student',
     };
   }
 
   @UseGuards(AuthGuard)
   @Post('check')
   @HttpCode(200)
-  check(): CheckResponse {
+  check(@Request() req: RequestWithPayload): CheckResponse {
     return {
       isAuth: true,
+      role: req.user.role,
     };
   }
 
@@ -74,10 +69,11 @@ export class AuthController {
   async refresh(
     @Res({ passthrough: true }) response: Response,
     @Request() req: RequestWithPayload,
-  ): Promise<LoginResponse> {
+  ): Promise<RefreshResponse> {
     const refreshResult: RefreshResult = await this.AuthService.generateTokens(
       req.user?.email,
       req.user?.sub,
+      req.user?.role,
     );
     response.cookie('refresh_token', refreshResult.refresh_token, {
       maxAge: millisecondsAge,

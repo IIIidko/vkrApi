@@ -12,7 +12,24 @@ export const createUserSchema = z.object({
   code: z.string().length(4),
 });
 
+const RoleEnum = z.enum(['student', 'teacher', 'admin', 'moderator']);
+const StatusEnum = z.enum(['active', 'blocked']);
+
+export const changeUserSchema = z.object({
+  id: z.number(),
+  email: z.string().email(),
+  first_name: z.string(),
+  last_name: z.string(),
+  middle_name: z.string().nullable().optional(),
+  birth_date: z.string().date(),
+  tel: z.string().min(12).nullable().optional(),
+  role: RoleEnum,
+  status: StatusEnum,
+});
+
 export type CreateUserDto = z.infer<typeof createUserSchema>;
+
+export type ChangeUserDto = z.infer<typeof changeUserSchema>;
 
 export type LoginUserDto = {
   email: string;

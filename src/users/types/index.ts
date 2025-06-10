@@ -1,5 +1,7 @@
 import { Request } from '@nestjs/common';
 
+type Role = 'student' | 'teacher' | 'admin' | 'moderator';
+
 export interface User {
   id: number;
   email: string;
@@ -8,17 +10,22 @@ export interface User {
   last_name: string;
   middle_name?: string | null;
   birth_date: string;
-  role: 'student' | 'teacher' | 'admin' | 'moderator';
+  role: Role;
   created_at: string | Date;
   last_login?: string | Date | null;
   status: 'active' | 'blocked';
   tel?: string | null;
 }
 
+export type UserForAdmin = Omit<User, 'password'>;
+
+export type UserForChange = Omit<UserForAdmin, 'last_login' | 'created_at'>;
+
 export interface UserForPasswordCheck {
   password: string;
   email: string;
   id: number;
+  role: Role;
 }
 
 export interface UserCheckExists {
@@ -52,6 +59,7 @@ export interface CheckCodeResult {
 export interface Payload {
   email: string;
   sub: number;
+  role: Role;
 }
 
 export interface RequestWithPayload extends Request {
